@@ -23,8 +23,11 @@ Route::post('/vote', [VoteController::class, 'store'])->name('vote.store');
 // Route untuk halaman peserta (admin)
 Route::get('/dashboard/participants', [ParticipantController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard.participants');
 Route::get('/dashboard/participants/create', [ParticipantController::class, 'create'])->middleware(['auth', 'verified'])->name('dashboard.participants.create');
-Route::get('/dashboard/participants/{participant}/edit', [ParticipantController::class, 'edit'])->middleware(['auth', 'verified'])->name('dashboard.participants.edit');
-Route::delete('/dashboard/participants/{participant}', [ParticipantController::class, 'destroy'])->name('dashboard.participants.destroy');
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('dashboard/participants/edit/{participant}', [ParticipantController::class, 'edit'])->name('dashboard.participants.edit');
+    Route::delete('dashboard/participants/{participant}', [ParticipantController::class, 'destroy'])->name('dashboard.participants.destroy');
+});
+
 Route::post('/dashboard/participants', [ParticipantController::class, 'store'])->name('dashboard.participants.store');
 
 // Route untuk Admin

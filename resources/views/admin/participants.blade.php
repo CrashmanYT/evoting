@@ -14,8 +14,22 @@
                             <x-secondary-button>{{ __('Add') }}</x-secondary-button>
                         </a>
                     </div>
-                    <?php $action_icons = [ "icon:pencil | click:redirect('" . route('dashboard.participants.edit', ['participant' => 'id']) . "')", "icon:trash | color:red | click:route('dashboard.participants.destroy', ['id' => 'id'])", ]; ?>
-                        <x-bladewind::table
+                    <script>
+                        function redirectToEdit(participantId) {
+                            window.location.href = `/dashboard/participants/edit/${participantId}`;
+                        }
+
+                        function deleteParticipant(participantId) { if (confirm('Are you sure?')) { fetch(`{{ route('dashboard.participants.destroy', ['participant' => ':id']) }}`.replace(':id', participantId), { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } }).then(response => { if (response.ok) { location.reload(); } else { alert('Failed to delete participant.'); } }); } }
+                    </script>
+
+                    <?php
+                    $action_icons = [
+                        "icon:pencil | click:redirectToEdit('{id}')",
+                        "icon:trash | color:red | click:deleteParticipant('{id}')",
+                    ];
+                    ?>
+
+                    <x-bladewind::table
                             searchable="true"
                             include_columns="nis, name, class"
                             :data="$participants"
@@ -30,20 +44,6 @@
                                 <th>Class</th>
                                 <th>Actions</th>
                             </x-slot>
-{{--                            @foreach($participants as $participant)--}}
-{{--                                <tr>--}}
-{{--                                    <td class="p-3 flex items-center space-x-2">--}}
-{{--                                        <a href="{{ route('dashboard.participants.edit', $participant) }}">--}}
-{{--                                            <x-primary-button>Edit</x-primary-button>--}}
-{{--                                        </a>--}}
-{{--                                        <form action="{{ route('dashboard.participants.destroy', $participant->id) }}" method="POST" style="display:inline-block;">--}}
-{{--                                            @csrf--}}
-{{--                                            @method('DELETE')--}}
-{{--                                            <x-danger-button onclick="return confirm('Are you sure?');">X</x-danger-button>--}}
-{{--                                        </form>--}}
-{{--                                    </td>--}}
-{{--                                </tr>--}}
-{{--                                @endforeach--}}
                         </x-bladewind::table>
                     </div>
                 </div>
