@@ -41,7 +41,8 @@ class ParticipantController extends Controller
 
     }
 
-    public function destroy(Participant $participant) {
+    public function destroy(int $participantid) {
+        $participant = Participant::all()->find($participantid);
         $participant->delete();
 
         return redirect()->back()->with('success', 'Peserta berhasil dihapus.');

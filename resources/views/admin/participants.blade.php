@@ -14,11 +14,14 @@
                             <x-secondary-button>{{ __('Add') }}</x-secondary-button>
                         </a>
                     </div>
+                    <?php $action_icons = [ "icon:pencil | click:redirect('" . route('dashboard.participants.edit', ['participant' => 'id']) . "')", "icon:trash | color:red | click:route('dashboard.participants.destroy', ['id' => 'id'])", ]; ?>
                         <x-bladewind::table
                             searchable="true"
                             include_columns="nis, name, class"
                             :data="$participants"
+                            :action_icons="$action_icons"
                             has_border="true"
+                            no_data_message="No data found"
                             divider="thin"
                         >
                             <x-slot name="header">
