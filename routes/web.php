@@ -37,8 +37,16 @@ Route::put('/dashboard/voting-limit', [AdminController::class, 'updateVotingLimi
 Route::put('/dashboard/profile', [AdminController::class, 'updateProfile'])->name('dashboard.updateProfile');
 
 // Route untuk Kandidat
+Route::get('/dashboard/candidates', [CandidateController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard.candidates');
+Route::get('/dashboard/candidates/create', [CandidateController::class, 'create'])->middleware(['auth', 'verified'])->name('dashboard.candidates.create');
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('dashboard/candidates/edit/{candidate}', [CandidateController::class, 'edit'])->name('dashboard.candidates.edit');
+    Route::delete('dashboard/candidates/{candidate}', [CandidateController::class, 'destroy'])->name('dashboard.candidates.destroy');
+});
 
-Route::resource('/dashboard/candidates', CandidateController::class);
+Route::post('/dashboard/candidates', [CandidateController::class, 'store'])->name('dashboard.candidates.store');
+
+// Route::resource('/dashboard/candidates', CandidateController::class);
 
 
 Route::get('/dashboard', function () {

@@ -18,7 +18,7 @@
                     <x-nav-link :href="route('dashboard.participants')"  :active="request()->routeIs('dashboard.participants')">
                         {{ __('Pemilih') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('candidates.index')" :active="request()->routeIs('dashboard.candidates')">
+                    <x-nav-link :href="route('dashboard.candidates')" :active="request()->routeIs('dashboard.candidates')">
                         {{ __('Kandidat') }}
                     </x-nav-link>
                     <x-nav-link :href="route('dashboard.settings')" :active="request()->routeIs('dashboard/settings')">

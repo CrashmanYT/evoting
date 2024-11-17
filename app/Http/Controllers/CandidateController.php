@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Candidate;
+use Illuminate\Support\Facades\Storage;
+use function Laravel\Prompts\alert;
 
 class CandidateController extends Controller
 {
@@ -23,15 +25,56 @@ class CandidateController extends Controller
     // Menyimpan kandidat baru ke database
     public function store(Request $request)
     {
+//        @dd($request);
         $request->validate([
+            'no_urut' => 'required',
             'name' => 'required|string|max:100',
             'description' => 'nullable|string',
-            'photo_url' => 'nullable|url'
+            'photo_url' => 'nullable|image'
         ]);
+//        @dd($request->all());
 
-        Candidate::create($request->all());
+        $fileName = null;
+        if ($request->hasFile('photo_url')) {
+            $image = $request->file('photo_url');
 
-        return redirect()->route('candidates.index')->with('success', 'Kandidat berhasil ditambahkan.');
+            // Ensure directory exists
+            if (!Storage::disk('public')->exists('candidates')) {
+                Storage::disk('public')->makeDirectory('candidates');
+            }
+
+            // Clean file name and ensure uniqueness
+            $originalName = $image->getClientOriginalName();
+
+
+            if (!$originalName) return back()->withErrors(['photo_url' => 'Failed to upload image.']);
+
+            $cleanName = preg_replace('/[^a-zA-Z0-9_-]/', '_', pathinfo($originalName, PATHINFO_FILENAME));
+            $extension = pathinfo($originalName, PATHINFO_EXTENSION);
+            $fileName = time() . '_' . uniqid() . '_' . $cleanName . '.' . $extension;
+
+
+            if (empty($fileName)) return back()->withErrors(['photo_url' => 'Failed to upload image.']);
+
+            // Store the file
+            try {
+                Storage::disk('public')->put('candidates/' . $fileName, file_get_contents($image));
+            } catch (\Exception $e) {
+
+                return back()->withErrors(['photo_url' => 'Failed to upload image.']);
+            }
+        }
+
+        $candidateData = [
+            'no_urut' => $request->no_urut,
+            'name' => $request->name,
+            'description' => $request->description,
+            'photo_url' => $fileName
+        ];
+
+        Candidate::create($candidateData);
+
+        return redirect()->route('dashboard.candidates')->with('success', 'Kandidat berhasil ditambahkan.');
     }
 
     // Menampilkan form untuk mengedit kandidat
@@ -62,6 +105,6 @@ class CandidateController extends Controller
         $candidate = Candidate::findOrFail($id);
         $candidate->delete();
 
-        return redirect()->route('candidates.index')->with('success', 'Kandidat berhasil dihapus.');
+        return response()->json(['success' => true]);
     }
 }

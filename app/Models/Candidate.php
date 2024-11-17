@@ -12,6 +12,7 @@ class Candidate extends Model
     protected $table = 'candidates';
 
     protected $fillable = [
+        'no_urut',
         'name',
         'description',
         'photo_url'

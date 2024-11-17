@@ -10,6 +10,7 @@ class CreateCandidatesTable extends Migration
     {
         Schema::create('candidates', function (Blueprint $table) {
             $table->id();
+            $table->integer('no_urut');
             $table->string('name', 100);
             $table->text('description')->nullable();
             $table->string('photo_url')->nullable(); // URL untuk foto kandidat
