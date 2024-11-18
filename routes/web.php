@@ -25,6 +25,7 @@ Route::get('/dashboard/participants', [ParticipantController::class, 'index'])->
 Route::get('/dashboard/participants/create', [ParticipantController::class, 'create'])->middleware(['auth', 'verified'])->name('dashboard.participants.create');
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard/participants/edit/{participant}', [ParticipantController::class, 'edit'])->name('dashboard.participants.edit');
+    Route::post('dashboard/participants/edit/{participant}', [ParticipantController::class, 'update'])->name('dashboard.participants.update');
     Route::delete('dashboard/participants/{participant}', [ParticipantController::class, 'destroy'])->name('dashboard.participants.destroy');
 });
 

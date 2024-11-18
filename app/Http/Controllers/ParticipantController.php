@@ -38,7 +38,15 @@ class ParticipantController extends Controller
     }
 
     public function update(Request $request, Participant $participant) {
+        $request->validate([
+            'nis' => 'required|unique:participants,nis,' . $participant->id,
+            'name' => 'required',
+            'class' => 'required' // Validate the class column
+        ]);
 
+        $participant->update($request->all());
+
+        return redirect()->route('dashboard.participants')->with('success', 'Peserta berhasil diperbarui.');
     }
 
     public function destroy($id)
