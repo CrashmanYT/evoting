@@ -42,6 +42,7 @@ Route::get('/dashboard/candidates', [CandidateController::class, 'index'])->midd
 Route::get('/dashboard/candidates/create', [CandidateController::class, 'create'])->middleware(['auth', 'verified'])->name('dashboard.candidates.create');
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard/candidates/edit/{candidate}', [CandidateController::class, 'edit'])->name('dashboard.candidates.edit');
+    Route::post('dashboard/candidates/edit/{candidate}', [CandidateController::class, 'update'])->name('dashboard.candidates.update');
     Route::delete('dashboard/candidates/{candidate}', [CandidateController::class, 'destroy'])->name('dashboard.candidates.destroy');
 });
 
