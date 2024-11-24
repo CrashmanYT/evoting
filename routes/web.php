@@ -45,6 +45,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/admin/participants/edit/{participant}', [ParticipantController::class, 'update'])->name('admin.participants.update');
     Route::delete('/admin/participants/{participant}', [ParticipantController::class, 'destroy'])->name('admin.participants.destroy');
     Route::post('/admin/participants/import', [ParticipantController::class, 'import'])->name('admin.participants.import');
+    Route::delete('/admin/participants', [ParticipantController::class, 'destroyAll'])->name('admin.participants.destroyAll');
 
     // Candidates Management
     Route::get('/admin/candidates', [CandidateController::class, 'index'])->name('admin.candidates');
