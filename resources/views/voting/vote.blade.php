@@ -31,7 +31,57 @@
                             <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 text-center">
                                 Pemilihan Calon Formatur IPM
                             </h2>
-                            
+
+                            @if(session('error'))
+                                <x-bladewind::modal
+                                    name="error-modal"
+                                    show_action_buttons="false"
+                                    type="error"
+                                    title="Voting Tidak Diizinkan"
+                                >
+                                    <div class="text-center">
+                                        <p class="mb-4">{{ session('error') }}</p>
+                                        <x-bladewind::button
+                                            size="tiny"
+                                            onclick="hideModal('error-modal')"
+                                        >
+                                            Tutup
+                                        </x-bladewind::button>
+                                    </div>
+                                </x-bladewind::modal>
+                                
+                                <script>
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        showModal('error-modal');
+                                    });
+                                </script>
+                            @endif
+
+                            @if(session('success'))
+                                <x-bladewind::modal
+                                    name="success-modal"
+                                    show_action_buttons="false"
+                                    type="success"
+                                    title="Voting Berhasil!"
+                                >
+                                    <div class="text-center">
+                                        <p class="mb-4">{{ session('success') }}</p>
+                                        <x-bladewind::button
+                                            size="tiny"
+                                            onclick="hideModal('success-modal')"
+                                        >
+                                            Tutup
+                                        </x-bladewind::button>
+                                    </div>
+                                </x-bladewind::modal>
+                                
+                                <script>
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        showModal('success-modal');
+                                    });
+                                </script>
+                            @endif
+
                             <form method="POST" action="{{ route('vote.store') }}" class="space-y-8">
                                 @csrf
                                 
@@ -56,8 +106,15 @@
                                         Daftar Kandidat
                                     </h3>
                                     <p class="text-sm text-gray-600 dark:text-gray-400 mb-6 text-center">
-                                        Pilih 7 kandidat yang menurut Anda paling tepat
+                                        Pilih {{ $voting_limit }} kandidat yang menurut Anda paling tepat
                                     </p>
+                                    @if($errors->any())
+                                        <div class="text-red-500 text-sm mt-4 text-center">
+                                            @foreach($errors->all() as $error)
+                                                <p>{{ $error }}</p>
+                                            @endforeach
+                                        </div>
+                                    @endif
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -82,8 +139,9 @@
                                                     <x-bladewind::checkbox 
                                                         name="candidate_ids[]" 
                                                         value="{{ $candidate->id }}"
-                                                        label="Pilih Kandidat" />
-                                                        
+                                                        label="{{ old('candidate_ids') && in_array($candidate->id, old('candidate_ids')) ? 'Terpilih' : 'Pilih Kandidat' }}"
+                                                        checked="{{ old('candidate_ids') && in_array($candidate->id, old('candidate_ids')) }}"
+                                                    />
                                                 </div>
                                             </div>
                                         </x-bladewind::card>
@@ -92,10 +150,10 @@
 
                                 <div class="mt-8 text-center">
                                     <x-bladewind::button 
-                                        can_submit="true" 
+                                        can_submit="true"
                                         size="big"
-                                        class="w-full md:w-auto">
-                                        Submit Vote
+                                    >
+                                        Submit Voting
                                     </x-bladewind::button>
                                 </div>
                             </form>

@@ -25,8 +25,8 @@ Route::get('/', function () {
 
 });
 
-// Route untuk halaman voting
-Route::get('/vote', [VoteController::class, 'index'])->name('vote.index');
+// Voting Routes
+Route::get('/vote', [VoteController::class, 'index'])->name('vote');
 Route::post('/vote', [VoteController::class, 'store'])->name('vote.store');
 
 // Route untuk halaman peserta (admin)

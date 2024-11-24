@@ -26,64 +26,81 @@ class VoteController extends Controller
     // Fungsi untuk memproses voting
     public function store(Request $request)
     {
-        $admin = Admin::first(); // Ambil admin untuk mendapatkan `voting_limit`
-        
-        $request->validate([
-            'nis' => 'required|exists:participants,nis',
-            'candidate_ids' => 'required|array|size:' . $admin->voting_limit,  // Harus memilih sesuai voting_limit
-            'candidate_ids.*' => 'exists:candidates,id',   // Setiap kandidat harus valid
-        ], [
-            'candidate_ids.size' => 'Anda harus memilih tepat ' . $admin->voting_limit . ' kandidat.',
-            'nis.required' => 'NIS wajib diisi.',
-            'nis.exists' => 'NIS tidak terdaftar dalam sistem.',
-        ]);
+        $admin = Admin::first();
+        $voting_limit = $admin->voting_limit;
 
+        // Cek NIS terlebih dahulu
         $participant = Participant::where('nis', $request->nis)->first();
+        
+        if (!$participant) {
+            return back()
+                ->withInput()
+                ->with('error', 'NIS tidak terdaftar dalam sistem.')
+                ->with('showErrorModal', true);
+        }
 
-        // Cek apakah peserta sudah melakukan voting
+        // Cek status voting
         if ($participant->voted) {
             return back()
                 ->withInput()
-                ->with('error', 'Maaf, Anda sudah melakukan voting sebelumnya.');
+                ->with('error', 'Maaf, Anda sudah melakukan voting sebelumnya. Silakan meninggalkan ruang voting.')
+                ->with('showErrorModal', true);
         }
-
-        // Cek apakah ada kandidat yang duplikat
-        if (count(array_unique($request->candidate_ids)) !== $admin->voting_limit) {
-            return back()
-                ->withInput()
-                ->with('error', 'Anda tidak boleh memilih kandidat yang sama lebih dari satu kali.');
-        }
+        
+        $request->validate([
+            'nis' => 'required|exists:participants,nis',
+            'candidate_ids' => [
+                'required',
+                'array',
+                'size:' . $voting_limit,  // Harus memilih sesuai voting_limit
+                function ($attribute, $value, $fail) {
+                    if (count(array_unique($value)) !== count($value)) {
+                        $fail('Tidak boleh memilih kandidat yang sama lebih dari satu kali.');
+                    }
+                },
+            ],
+            'candidate_ids.*' => 'exists:candidates,id',
+        ], [
+            'candidate_ids.required' => 'Anda harus memilih kandidat.',
+            'candidate_ids.size' => 'Anda harus memilih tepat ' . $voting_limit . ' kandidat.',
+            'nis.required' => 'NIS wajib diisi.',
+            'nis.exists' => 'NIS tidak terdaftar dalam sistem.',
+            'candidate_ids.*.exists' => 'Salah satu kandidat yang dipilih tidak valid.',
+        ]);
 
         try {
-            // Mulai transaksi database
             DB::beginTransaction();
 
-            // Simpan setiap suara untuk kandidat yang dipilih
-            foreach ($request->candidate_ids as $candidate_id) {
+            // Simpan vote untuk setiap kandidat yang dipilih
+            foreach ($request->candidate_ids as $candidateId) {
                 Vote::create([
                     'participant_id' => $participant->id,
-                    'candidate_id' => $candidate_id
+                    'candidate_id' => $candidateId
                 ]);
             }
 
-            // Update status voted peserta
+            // Update status voting peserta
             $participant->update(['voted' => true]);
 
-            // Commit transaksi
             DB::commit();
-
+            
+            // Redirect kembali ke halaman voting dengan pesan sukses
             return redirect()
-                ->route('results')
-                ->with('success', 'Terima kasih! Suara Anda telah berhasil disimpan.');
+                ->route('vote')
+                ->with('success', 'Terima kasih! Suara Anda telah berhasil disimpan. Silakan meninggalkan ruang voting.')
+                ->with('showModal', true);
 
         } catch (\Exception $e) {
-            // Rollback transaksi jika terjadi error
             DB::rollBack();
+            Log::error('Error in voting process', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             
-            Log::error('Voting error: ' . $e->getMessage());
             return back()
                 ->withInput()
-                ->with('error', 'Terjadi kesalahan saat menyimpan suara Anda. Silakan coba lagi.');
+                ->with('error', 'Terjadi kesalahan saat memproses voting. Silakan coba lagi.')
+                ->with('showErrorModal', true);
         }
     }
 
