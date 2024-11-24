@@ -66,7 +66,7 @@ class CandidateController extends Controller
         ];
 
         Candidate::create($candidateData);
-        return redirect()->route('dashboard.candidates')->with('success', 'Kandidat berhasil ditambahkan.');
+        return redirect()->route('admin.candidates')->with('success', 'Kandidat berhasil ditambahkan.');
     }
 
     // Menampilkan form untuk mengedit kandidat
@@ -107,7 +107,7 @@ class CandidateController extends Controller
             'description' => $request->description,
             'photo_url' => $fileName,
         ]);
-        return redirect()->route('dashboard.candidates')->with('success', 'Kandidat berhasil diedit.');
+        return redirect()->route('admin.candidates')->with('success', 'Kandidat berhasil diedit.');
     }
 
     // // Mengupdate data kandidat

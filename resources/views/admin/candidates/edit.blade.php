@@ -11,7 +11,7 @@
             <div class=" overflow-hidden shadow-sm sm:rounded-lg">
                 <div class=" p-6 bg-gray-800 text-white">
                     <h1 class="text-2xl font-bold pb-6 justify-center flex">Edit Candidate</h1>
-                    <form action="{{ route('dashboard.candidates.update', $candidate) }}" method="POST"
+                    <form action="{{ route('admin.candidates.update', $candidate) }}" method="POST"
                         enctype="multipart/form-data">
                         @csrf
                         <x-bladewind::input name="no_urut" label="No Urut" numeric="true" required="true" class="p-6"

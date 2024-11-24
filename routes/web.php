@@ -7,54 +7,55 @@ use App\Http\Controllers\ParticipantController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CandidateController;
 use App\Http\Controllers\RealTimeResultController;
+use App\Http\Controllers\VoterController;
 
-
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
+|
+*/
 
 Route::get('/', function () {
     return view('welcome');
 
 });
 
-
 // Route untuk halaman voting
 Route::get('/vote', [VoteController::class, 'index'])->name('vote.index');
 Route::post('/vote', [VoteController::class, 'store'])->name('vote.store');
 
 // Route untuk halaman peserta (admin)
-Route::get('/dashboard/participants', [ParticipantController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard.participants');
-Route::get('/dashboard/participants/create', [ParticipantController::class, 'create'])->middleware(['auth', 'verified'])->name('dashboard.participants.create');
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard/participants/edit/{participant}', [ParticipantController::class, 'edit'])->name('dashboard.participants.edit');
-    Route::post('dashboard/participants/edit/{participant}', [ParticipantController::class, 'update'])->name('dashboard.participants.update');
-    Route::delete('dashboard/participants/{participant}', [ParticipantController::class, 'destroy'])->name('dashboard.participants.destroy');
+Route::middleware(['auth'])->group(function () {
+    // Admin Dashboard
+    Route::get('/admin', [AdminController::class, 'index'])->name('admin.dashboard');
+    Route::get('/admin/settings', [AdminController::class, 'settings'])->name('admin.settings');
+    Route::put('/admin/voting-limit', [AdminController::class, 'updateVotingLimit'])->name('admin.updateVotingLimit');
+    Route::put('/admin/profile', [AdminController::class, 'updateProfile'])->name('admin.updateProfile');
+
+    // Participants Management
+    Route::get('/admin/participants', [ParticipantController::class, 'index'])->name('admin.participants');
+    Route::get('/admin/participants/create', [ParticipantController::class, 'create'])->name('admin.participants.create');
+    Route::post('/admin/participants', [ParticipantController::class, 'store'])->name('admin.participants.store');
+    Route::get('/admin/participants/edit/{participant}', [ParticipantController::class, 'edit'])->name('admin.participants.edit');
+    Route::post('/admin/participants/edit/{participant}', [ParticipantController::class, 'update'])->name('admin.participants.update');
+    Route::delete('/admin/participants/{participant}', [ParticipantController::class, 'destroy'])->name('admin.participants.destroy');
+    Route::post('/admin/participants/import', [ParticipantController::class, 'import'])->name('admin.participants.import');
+
+    // Candidates Management
+    Route::get('/admin/candidates', [CandidateController::class, 'index'])->name('admin.candidates');
+    Route::get('/admin/candidates/create', [CandidateController::class, 'create'])->name('admin.candidates.create');
+    Route::post('/admin/candidates', [CandidateController::class, 'store'])->name('admin.candidates.store');
+    Route::get('/admin/candidates/edit/{candidate}', [CandidateController::class, 'edit'])->name('admin.candidates.edit');
+    Route::post('/admin/candidates/edit/{candidate}', [CandidateController::class, 'update'])->name('admin.candidates.update');
+    Route::delete('/admin/candidates/{candidate}', [CandidateController::class, 'destroy'])->name('admin.candidates.destroy');
 });
 
-Route::post('/dashboard/participants', [ParticipantController::class, 'store'])->name('dashboard.participants.store');
-
-// Route untuk Admin
-Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
-Route::get('/dashboard/settings', [AdminController::class, 'settings'])->middleware(['auth', 'verified'])->name('dashboard.settings');
-Route::put('/dashboard/voting-limit', [AdminController::class, 'updateVotingLimit'])->name('dashboard.updateVotingLimit');
-Route::put('/dashboard/profile', [AdminController::class, 'updateProfile'])->name('dashboard.updateProfile');
-
-// Route untuk Kandidat
-Route::get('/dashboard/candidates', [CandidateController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard.candidates');
-Route::get('/dashboard/candidates/create', [CandidateController::class, 'create'])->middleware(['auth', 'verified'])->name('dashboard.candidates.create');
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard/candidates/edit/{candidate}', [CandidateController::class, 'edit'])->name('dashboard.candidates.edit');
-    Route::post('dashboard/candidates/edit/{candidate}', [CandidateController::class, 'update'])->name('dashboard.candidates.update');
-    Route::delete('dashboard/candidates/{candidate}', [CandidateController::class, 'destroy'])->name('dashboard.candidates.destroy');
-});
-
-Route::post('/dashboard/candidates', [CandidateController::class, 'store'])->name('dashboard.candidates.store');
-
-// Route::resource('/dashboard/candidates', CandidateController::class);
-
-
-Route::get('/dashboard', function () {
-    return view('admin/dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
+// Profile Routes
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

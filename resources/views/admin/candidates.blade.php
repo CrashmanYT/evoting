@@ -9,56 +9,71 @@
             <div
                 class="max-w-7xl mx-auto sm:px-6 lg:px-8 bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg pt-6 pb-6">
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                    {{--                    <div class="p-6 text-gray-900 dark:text-gray-100"> --}}
-                    <div class="pb-6">
-                        <a href="{{ route('dashboard.candidates.create') }}" class="">
-                            <x-secondary-button>{{ __('Add') }}</x-secondary-button>
-                        </a>
-                    </div>
-                    <x-bladewind::modal title="Anda Yakin?" type="warning" name="delete-warning"
-                        icon="exclamation-triangle" ok_button_action="deleteCandidate()">
-                        Data yang anda hapus tidak dapat kembali.
-                        Apakah Anda Yakin?
-                    </x-bladewind::modal>
+                    <div class="p-6 text-gray-900 dark:text-gray-100">
+                        <h2 class="text-2xl font-bold mb-4">Data Kandidat</h2>
 
-                    <script>
-                        let candidateToDelete = null;
+                        @if(session('success'))
+                            <x-bladewind::alert type="success">
+                                {{ session('success') }}
+                            </x-bladewind::alert>
+                        @endif
 
-                        function redirectToEdit(candidateId) {
-                            window.location.href = `/dashboard/candidates/edit/${candidateId}`;
-                        }
+                        @if(session('error'))
+                            <x-bladewind::alert type="error">
+                                {{ session('error') }}
+                            </x-bladewind::alert>
+                        @endif
 
-                        function showModalWithcandidateId(modalName, candidateId) {
-                            candidateToDelete = candidateId;
-                            showModal(modalName);
-                        }
+                        <div class="pb-6">
+                            <a href="{{ route('admin.candidates.create') }}" class="">
+                                <x-secondary-button>{{ __('Add') }}</x-secondary-button>
+                            </a>
+                        </div>
+                        <x-bladewind::modal title="Anda Yakin?" type="warning" name="delete-warning"
+                            icon="exclamation-triangle" ok_button_action="deleteCandidate()">
+                            Data yang anda hapus tidak dapat kembali.
+                            Apakah Anda Yakin?
+                        </x-bladewind::modal>
 
-                        function deleteCandidate() {
-                            if (candidateToDelete) {
-                                fetch(`{{ route('dashboard.candidates.destroy', ['candidate' => ':id']) }}`.replace(':id',
-                                    candidateToDelete), {
-                                    method: 'DELETE',
-                                    headers: {
-                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                    }
-                                }).then(response => response.json()).then(data => {
-                                    if (data.success) {
-                                        location.reload();
-                                    } else {
-                                        alert('Failed to delete candidates.');
-                                    }
-                                }).catch(error => {
-                                    console.error('Error:', error);
-                                    alert('An error occurred while trying to delete the candidates.');
-                                });
+                        <script>
+                            let candidateToDelete = null;
+
+                            function redirectToEdit(candidateId) {
+                                window.location.href = `/admin/candidates/edit/${candidateId}`;
                             }
-                        }
-                    </script>
-                    <?php $action_icons = ["icon:pencil | click:redirectToEdit('{id}')", "icon:trash | color:red | click:showModalWithcandidateId('delete-warning', '{id}')"]; ?>
 
-                    <x-bladewind::table searchable="true" include_columns="no_urut, name, description, photo_url" :data="$candidates"
-                        :action_icons="$action_icons" has_border="true" no_data_message="No data found" divider="thin">
-                    </x-bladewind::table>
+                            function showModalWithcandidateId(modalName, candidateId) {
+                                candidateToDelete = candidateId;
+                                showModal(modalName);
+                            }
+
+                            function deleteCandidate() {
+                                if (candidateToDelete) {
+                                    fetch(`{{ route('admin.candidates.destroy', ['candidate' => ':id']) }}`.replace(':id',
+                                        candidateToDelete), {
+                                        method: 'DELETE',
+                                        headers: {
+                                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                        }
+                                    }).then(response => response.json()).then(data => {
+                                        if (data.success) {
+                                            location.reload();
+                                        } else {
+                                            alert('Failed to delete candidates.');
+                                        }
+                                    }).catch(error => {
+                                        console.error('Error:', error);
+                                        alert('An error occurred while trying to delete the candidates.');
+                                    });
+                                }
+                            }
+                        </script>
+                        <?php $action_icons = ["icon:pencil | click:redirectToEdit('{id}')", "icon:trash | color:red | click:showModalWithcandidateId('delete-warning', '{id}')"]; ?>
+
+                        <x-bladewind::table searchable="true" include_columns="no_urut, name, description, photo_url" :data="$candidates"
+                            :action_icons="$action_icons" has_border="true" no_data_message="No data found" divider="thin">
+                        </x-bladewind::table>
+                    </div>
                 </div>
             </div>
         </div>
