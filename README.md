@@ -113,35 +113,120 @@ This is a web-based e-voting system built with Laravel, designed to facilitate s
 - Secure password handling
 
 ## Installation Guide
-1. Clone the repository
-2. Install PHP dependencies:
+
+### Using Laragon
+1. Install Laragon from [https://laragon.org/download/](https://laragon.org/download/)
+2. Start Laragon and ensure Apache and MySQL services are running
+3. Clone the repository to `C:/laragon/www/evoting`:
+   ```bash
+   git clone [repository-url] C:/laragon/www/evoting
+   ```
+4. Open Laragon Terminal (Alt+T) and navigate to project:
+   ```bash
+   cd C:/laragon/www/evoting
+   ```
+5. Install PHP dependencies:
    ```bash
    composer install
    ```
-3. Install JavaScript dependencies:
+6. Install JavaScript dependencies:
    ```bash
    npm install
    ```
-4. Configure environment variables:
+7. Configure environment:
    - Copy `.env.example` to `.env`
-   - Configure database settings
-   - Set up mail server details
-5. Generate application key:
+   - Configure database settings:
+     ```
+     DB_CONNECTION=mysql
+     DB_HOST=127.0.0.1
+     DB_PORT=3306
+     DB_DATABASE=evoting
+     DB_USERNAME=root
+     DB_PASSWORD=
+     ```
+8. Create database named 'evoting' using HeidiSQL (included in Laragon)
+9. Generate application key:
    ```bash
    php artisan key:generate
    ```
-6. Run database migrations:
+10. Run database migrations:
+    ```bash
+    php artisan migrate
+    ```
+11. Build frontend assets:
+    ```bash
+    npm run build
+    ```
+12. Access the application at [http://evoting.test](http://evoting.test)
+
+### Using XAMPP
+1. Install XAMPP from [https://www.apachefriends.org/download.html](https://www.apachefriends.org/download.html)
+2. Start XAMPP Control Panel and start Apache and MySQL services
+3. Clone the repository to `C:/xampp/htdocs/evoting`:
    ```bash
-   php artisan migrate
+   git clone [repository-url] C:/xampp/htdocs/evoting
    ```
-7. Build frontend assets:
+4. Open Command Prompt and navigate to project:
    ```bash
-   npm run build
+   cd C:/xampp/htdocs/evoting
    ```
-8. Start the development server:
+5. Install PHP dependencies:
    ```bash
-   php artisan serve
+   composer install
    ```
+6. Install JavaScript dependencies:
+   ```bash
+   npm install
+   ```
+7. Configure environment:
+   - Copy `.env.example` to `.env`
+   - Configure database settings:
+     ```
+     DB_CONNECTION=mysql
+     DB_HOST=127.0.0.1
+     DB_PORT=3306
+     DB_DATABASE=evoting
+     DB_USERNAME=root
+     DB_PASSWORD=
+     ```
+8. Create database named 'evoting' using phpMyAdmin (http://localhost/phpmyadmin)
+9. Generate application key:
+   ```bash
+   php artisan key:generate
+   ```
+10. Run database migrations:
+    ```bash
+    php artisan migrate
+    ```
+11. Build frontend assets:
+    ```bash
+    npm run build
+    ```
+12. Access the application at [http://localhost/evoting/public](http://localhost/evoting/public)
+
+### Virtual Host Configuration (XAMPP)
+To access the application using a custom domain like evoting.test:
+
+1. Edit hosts file (`C:/Windows/System32/drivers/etc/hosts`):
+   ```
+   127.0.0.1 evoting.test
+   ```
+
+2. Configure Apache Virtual Host (`C:/xampp/apache/conf/extra/httpd-vhosts.conf`):
+   ```apache
+   <VirtualHost *:80>
+       DocumentRoot "C:/xampp/htdocs/evoting/public"
+       ServerName evoting.test
+       <Directory "C:/xampp/htdocs/evoting/public">
+           Options Indexes FollowSymLinks MultiViews
+           AllowOverride All
+           Require all granted
+       </Directory>
+   </VirtualHost>
+   ```
+
+3. Restart Apache from XAMPP Control Panel
+4. Access the application at [http://evoting.test](http://evoting.test)
 
 ## Usage Guide
 1. **Admin Access**
