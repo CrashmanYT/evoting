@@ -70,9 +70,11 @@
                         </script>
                         <?php $action_icons = ["icon:pencil | click:redirectToEdit('{id}')", "icon:trash | color:red | click:showModalWithcandidateId('delete-warning', '{id}')"]; ?>
 
-                        <x-bladewind::table searchable="true" include_columns="no_urut, name, description, photo_url" :data="$candidates"
-                            :action_icons="$action_icons" has_border="true" no_data_message="No data found" divider="thin">
-                        </x-bladewind::table>
+                        <x-responsive-table 
+                            :data="$candidates"
+                            columns="no_urut, name, description, photo_url"
+                            :actions="$action_icons"
+                        />
                     </div>
                 </div>
             </div>

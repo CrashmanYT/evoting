@@ -52,6 +52,7 @@
                         <x-bladewind::table
                             divider="thin"
                             striped="true"
+                            has_shadow="true"
                             compact="true">
                             <x-slot name="header">
                                 <th class="text-left">Nama Kandidat</th>

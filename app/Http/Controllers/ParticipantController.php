@@ -63,39 +63,63 @@ class ParticipantController extends Controller
         return back()->with('success', 'Data peserta berhasil diperbarui!');
     }
 
-    public function destroy($id)
+    public function checkVoted($id)
+    {
+        try {
+            $participant = Participant::findOrFail($id);
+            return response()->json([
+                'has_voted' => $participant->voted
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Peserta tidak ditemukan'
+            ], 404);
+        }
+    }
+
+    public function destroy($id, Request $request)
     {
         try {
             DB::beginTransaction();
             
             $participant = Participant::findOrFail($id);
-            Log::info('Attempting to delete participant', [
-                'id' => $id,
-                'participant' => $participant->toArray()
-            ]);
+            $forceDelete = $request->input('force_delete', false);
             
-            // Check if participant can be deleted (add your conditions here)
+            if ($participant->voted && !$forceDelete) {
+                throw new \Exception('Peserta ini sudah melakukan voting. Centang opsi force delete untuk menghapus paksa.');
+            }
+            
             if ($participant->voted) {
-                throw new \Exception('Tidak dapat menghapus peserta yang sudah melakukan voting.');
+                // Hapus data voting terlebih dahulu
+                DB::table('votes')->where('participant_id', $id)->delete();
             }
             
             $participant->delete();
             
             DB::commit();
-            Log::info('Participant deleted successfully', ['id' => $id]);
+            
+            $message = $participant->voted 
+                ? 'Berhasil menghapus paksa peserta beserta data voting.' 
+                : 'Berhasil menghapus peserta.';
+            
+            Log::info('Participant deleted', [
+                'participant_id' => $id,
+                'force_delete' => $forceDelete,
+                'had_voted' => $participant->voted
+            ]);
 
             if (request()->expectsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Peserta berhasil dihapus!'
+                    'message' => $message
                 ]);
             }
 
-            return back()->with('success', 'Peserta berhasil dihapus!');
+            return back()->with('success', $message);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error deleting participant', [
-                'id' => $id,
+                'participant_id' => $id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -111,46 +135,74 @@ class ParticipantController extends Controller
         }
     }
 
-    public function destroyAll()
+    public function destroyAll(Request $request)
     {
         try {
             DB::beginTransaction();
             
-            // Check if any participant has voted
-            $votedParticipants = Participant::where('voted', true)->count();
-            if ($votedParticipants > 0) {
-                throw new \Exception('Tidak dapat menghapus semua data karena ada peserta yang sudah melakukan voting.');
+            $forceDelete = $request->input('force_delete', false);
+            
+            if ($forceDelete) {
+                // Get total count before deletion
+                $totalParticipants = Participant::count();
+                $votedCount = Participant::where('voted', true)->count();
+                
+                // Delete all votes first
+                DB::table('votes')->delete();
+                
+                // Delete all participants
+                Participant::query()->delete();
+                
+                DB::commit();
+                
+                $message = "Berhasil menghapus paksa semua data peserta ({$totalParticipants} peserta, termasuk {$votedCount} peserta yang sudah voting).";
+                
+                Log::info('All participants force deleted', [
+                    'total_deleted' => $totalParticipants,
+                    'voted_deleted' => $votedCount
+                ]);
+            } else {
+                // Get participants that haven't voted
+                $nonVotedParticipants = Participant::where('voted', false)->get();
+                
+                if ($nonVotedParticipants->isEmpty()) {
+                    throw new \Exception('Tidak ada data peserta yang dapat dihapus karena semua peserta sudah melakukan voting.');
+                }
+                
+                // Count participants before deletion
+                $totalToDelete = $nonVotedParticipants->count();
+                $totalVoted = Participant::where('voted', true)->count();
+                
+                // Delete non-voted participants
+                Participant::where('voted', false)->delete();
+                
+                DB::commit();
+                
+                $message = "Berhasil menghapus {$totalToDelete} data peserta yang belum melakukan voting.";
+                if ($totalVoted > 0) {
+                    $message .= " {$totalVoted} peserta yang sudah melakukan voting tidak dihapus.";
+                }
+                
+                Log::info('Non-voted participants deleted', [
+                    'deleted_count' => $totalToDelete,
+                    'remaining_voted' => $totalVoted
+                ]);
             }
-            
-            // Get total participants before deletion
-            $totalParticipants = Participant::count();
-            
-            // Delete related votes first
-            DB::table('votes')->whereIn('participant_id', function($query) {
-                $query->select('id')->from('participants');
-            })->delete();
-            
-            // Now delete all participants
-            Participant::query()->delete();
-            
-            DB::commit();
-            Log::info('All participants deleted successfully', [
-                'total_deleted' => $totalParticipants
-            ]);
 
             if (request()->expectsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Semua data peserta berhasil dihapus!'
+                    'message' => $message
                 ]);
             }
 
-            return back()->with('success', 'Semua data peserta berhasil dihapus!');
+            return back()->with('success', $message);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error deleting all participants', [
+            Log::error('Error deleting participants', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
+                'force_delete' => $forceDelete
             ]);
             
             if (request()->expectsJson()) {
@@ -160,7 +212,7 @@ class ParticipantController extends Controller
                 ], 400);
             }
             
-            return back()->with('error', 'Gagal menghapus semua data: ' . $e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 

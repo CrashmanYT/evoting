@@ -64,19 +64,50 @@
 
                         <x-bladewind::modal title="Anda Yakin?" type="warning" name="delete-warning"
                             icon="exclamation-triangle" ok_button_action="deleteParticipant()">
-                            Data yang anda hapus tidak dapat kembali.
-                            Apakah Anda Yakin?
+                            <div class="space-y-4">
+                                <p class="font-bold text-red-600">Peringatan!</p>
+                                <div id="deleteWarningMessage">
+                                    Data yang anda hapus tidak dapat kembali.
+                                    Apakah Anda Yakin?
+                                </div>
+                                <div id="forceDeleteSection" class="hidden mt-4">
+                                    <div class="bg-red-50 border-l-4 border-red-600 p-4 mb-4">
+                                        <p class="text-red-700">Peserta ini sudah melakukan voting!</p>
+                                    </div>
+                                    <label class="flex items-center space-x-2">
+                                        <input type="checkbox" id="confirmForceDelete" class="form-checkbox h-4 w-4 text-red-600">
+                                        <span class="text-red-600 font-semibold">Saya ingin menghapus PAKSA data peserta ini termasuk data voting</span>
+                                    </label>
+                                </div>
+                            </div>
                         </x-bladewind::modal>
 
                         <x-bladewind::modal
                             name="delete-all-warning"
-                            title="Hapus Semua Data"
+                            title="⚠️ Peringatan Penghapusan Data"
                             type="error"
                             icon="exclamation-triangle"
-                            ok_button_action="deleteAllParticipants()"
+                            ok_button_action="confirmFinalDeleteAll()"
+                            ok_button_label="Ya, Saya Mengerti"
+                            cancel_button_label="Batal"
                         >
-                            Semua data peserta akan dihapus dan tidak dapat dikembalikan.
-                            Apakah Anda yakin ingin menghapus semua data?
+                            <div class="space-y-4">
+                                <p class="font-bold text-red-600">Peringatan Penting!</p>
+                                <ul class="list-disc pl-5 space-y-2">
+                                    <li>Semua data peserta akan dihapus secara permanen</li>
+                                    <li>Tindakan ini tidak dapat dibatalkan</li>
+                                </ul>
+                                <div class="mt-4 space-y-2">
+                                    <label class="flex items-center space-x-2">
+                                        <input type="checkbox" id="confirmDeleteAll" class="form-checkbox h-4 w-4 text-red-600">
+                                        <span>Saya mengerti konsekuensi dari penghapusan data ini</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2">
+                                        <input type="checkbox" id="forceDelete" class="form-checkbox h-4 w-4 text-red-600">
+                                        <span class="text-red-600 font-semibold">Saya ingin menghapus PAKSA semua data termasuk peserta yang sudah melakukan voting</span>
+                                    </label>
+                                </div>
+                            </div>
                         </x-bladewind::modal>
                         <div class="flex justify-between items-center mb-4 mt-6">
                             <div class="flex space-x-4">
@@ -90,6 +121,7 @@
                         
                         <script>
                             let participantToDelete = null;
+                            let participantHasVoted = false;
 
                             function showNotification(message, type = 'success') {
                                 notify(message, type);
@@ -101,14 +133,46 @@
 
                             function showModalWithParticipantId(modalName, participantId) {
                                 participantToDelete = participantId;
-                                showModal(modalName);
+                                
+                                // Cek status voting peserta
+                                fetch(`/admin/participants/${participantId}/check-voted`, {
+                                    headers: {
+                                        'Accept': 'application/json'
+                                    }
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    participantHasVoted = data.has_voted;
+                                    
+                                    // Tampilkan/sembunyikan section force delete
+                                    const forceDeleteSection = document.getElementById('forceDeleteSection');
+                                    if (participantHasVoted) {
+                                        forceDeleteSection.classList.remove('hidden');
+                                        document.getElementById('confirmForceDelete').checked = false;
+                                    } else {
+                                        forceDeleteSection.classList.add('hidden');
+                                    }
+                                    
+                                    showModal(modalName);
+                                });
                             }
 
                             function confirmDeleteAll() {
                                 showModal('delete-all-warning');
+                                // Reset checkbox setiap kali modal dibuka
+                                document.getElementById('confirmDeleteAll').checked = false;
+                                document.getElementById('forceDelete').checked = false;
                             }
 
-                            function deleteAllParticipants() {
+                            function confirmFinalDeleteAll() {
+                                const checkbox = document.getElementById('confirmDeleteAll');
+                                const forceDelete = document.getElementById('forceDelete');
+                                
+                                if (!checkbox.checked) {
+                                    showNotification('Anda harus mencentang kotak konfirmasi terlebih dahulu', 'error');
+                                    return;
+                                }
+
                                 const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
                                 
                                 fetch('/admin/participants', {
@@ -117,7 +181,10 @@
                                         'X-CSRF-TOKEN': token,
                                         'Accept': 'application/json',
                                         'Content-Type': 'application/json'
-                                    }
+                                    },
+                                    body: JSON.stringify({
+                                        force_delete: forceDelete.checked
+                                    })
                                 })
                                 .then(response => {
                                     if (!response.ok) {
@@ -130,53 +197,60 @@
                                         sessionStorage.setItem('success_message', data.message);
                                         location.reload();
                                     } else {
-                                        alert(data.message || 'Gagal menghapus semua data peserta.');
+                                        hideModal('delete-all-warning');
+                                        showNotification(data.message || 'Gagal menghapus data peserta.', 'error');
                                     }
                                 })
                                 .catch(error => {
                                     console.error('Error:', error);
-                                    alert(error.message || 'Terjadi kesalahan saat menghapus semua data peserta.');
-                                })
-                                .finally(() => {
                                     hideModal('delete-all-warning');
+                                    showNotification(error.message || 'Terjadi kesalahan saat menghapus data peserta.', 'error');
                                 });
                             }
 
                             function deleteParticipant() {
-                                if (participantToDelete) {
-                                    const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                                    
-                                    fetch(`/admin/participants/${participantToDelete}`, {
-                                        method: 'DELETE',
-                                        headers: {
-                                            'X-CSRF-TOKEN': token,
-                                            'Accept': 'application/json',
-                                            'Content-Type': 'application/json'
-                                        }
-                                    })
-                                    .then(response => {
-                                        if (!response.ok) {
-                                            return response.json().then(err => Promise.reject(err));
-                                        }
-                                        return response.json();
-                                    })
-                                    .then(data => {
-                                        if (data.success) {
-                                            // Set success message in session storage
-                                            sessionStorage.setItem('success_message', data.message);
-                                            location.reload();
-                                        } else {
-                                            alert(data.message || 'Gagal menghapus peserta.');
-                                        }
-                                    })
-                                    .catch(error => {
-                                        console.error('Error:', error);
-                                        alert(error.message || 'Terjadi kesalahan saat menghapus peserta.');
-                                    })
-                                    .finally(() => {
-                                        hideModal('delete-warning');
-                                    });
+                                if (!participantToDelete) return;
+
+                                if (participantHasVoted) {
+                                    const forceDeleteCheckbox = document.getElementById('confirmForceDelete');
+                                    if (!forceDeleteCheckbox.checked) {
+                                        showNotification('Anda harus mencentang konfirmasi untuk menghapus paksa peserta yang sudah voting', 'error');
+                                        return;
+                                    }
                                 }
+
+                                const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                                
+                                fetch(`/admin/participants/${participantToDelete}`, {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'X-CSRF-TOKEN': token,
+                                        'Accept': 'application/json',
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({
+                                        force_delete: participantHasVoted
+                                    })
+                                })
+                                .then(response => {
+                                    if (!response.ok) {
+                                        return response.json().then(err => Promise.reject(err));
+                                    }
+                                    return response.json();
+                                })
+                                .then(data => {
+                                    if (data.success) {
+                                        location.reload();
+                                    } else {
+                                        hideModal('delete-warning');
+                                        showNotification(data.message || 'Gagal menghapus peserta.', 'error');
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                    hideModal('delete-warning');
+                                    showNotification(error.message || 'Terjadi kesalahan saat menghapus peserta.', 'error');
+                                });
                             }
 
                             // Check for success message on page load
@@ -190,9 +264,11 @@
                         </script>
                         <?php $action_icons = ["icon:pencil | click:redirectToEdit('{id}')", "icon:trash | color:red | click:showModalWithParticipantId('delete-warning', '{id}')"]; ?>
 
-                        <x-bladewind::table searchable="true" include_columns="nis, name, class, voted" :data="$participants"
-                            :action_icons="$action_icons" has_border="true" no_data_message="No data found" divider="thin">
-                        </x-bladewind::table>
+                        <x-responsive-table 
+                            :data="$participants"
+                            columns="nis, name, class, voted"
+                            :actions="$action_icons"
+                        />
                     </div>
                 </div>
             </div>
