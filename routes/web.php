@@ -29,13 +29,18 @@ Route::get('/', function () {
 Route::get('/vote', [VoteController::class, 'index'])->name('vote');
 Route::post('/vote', [VoteController::class, 'store'])->name('vote.store');
 
-// Route untuk halaman peserta (admin)
-Route::middleware(['auth'])->group(function () {
+// Admin Routes
+Route::middleware(['auth:admin'])->group(function () {
     // Admin Dashboard
     Route::get('/admin', [AdminController::class, 'index'])->name('admin.dashboard');
     Route::get('/admin/settings', [AdminController::class, 'settings'])->name('admin.settings');
     Route::put('/admin/voting-limit', [AdminController::class, 'updateVotingLimit'])->name('admin.updateVotingLimit');
     Route::put('/admin/profile', [AdminController::class, 'updateProfile'])->name('admin.updateProfile');
+
+    // Profile Routes
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Participants Management
     Route::get('/admin/participants', [ParticipantController::class, 'index'])->name('admin.participants');
@@ -53,15 +58,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/admin/candidates/create', [CandidateController::class, 'create'])->name('admin.candidates.create');
     Route::post('/admin/candidates', [CandidateController::class, 'store'])->name('admin.candidates.store');
     Route::get('/admin/candidates/edit/{candidate}', [CandidateController::class, 'edit'])->name('admin.candidates.edit');
-    Route::post('/admin/candidates/edit/{candidate}', [CandidateController::class, 'update'])->name('admin.candidates.update');
+    Route::put('/admin/candidates/{candidate}', [CandidateController::class, 'update'])->name('admin.candidates.update');
     Route::delete('/admin/candidates/{candidate}', [CandidateController::class, 'destroy'])->name('admin.candidates.destroy');
-});
-
-// Profile Routes
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 require __DIR__.'/auth.php';

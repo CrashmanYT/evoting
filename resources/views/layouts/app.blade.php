@@ -16,6 +16,8 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        @stack('scripts')
     </head>
     <body class="font-sans antialiased dark">
         <div class="min-h-screen bg-gray-100 dark:bg-gray-900">

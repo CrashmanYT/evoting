@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Admin;
 use App\Models\Participant;
 use App\Models\Candidate;
+use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
@@ -14,32 +15,25 @@ class AdminController extends Controller
     {
         // Hitung total peserta
         $totalParticipants = Participant::count();
-        
-        // Hitung yang sudah voting
         $totalVoted = Participant::where('voted', true)->count();
-        
-        // Hitung yang belum voting
         $totalNotVoted = $totalParticipants - $totalVoted;
         
-        // Hitung persentase partisipasi
+        // Hitung tingkat partisipasi
         $participationRate = $totalParticipants > 0 
-            ? round(($totalVoted / $totalParticipants) * 100, 2) 
+            ? round(($totalVoted / $totalParticipants) * 100, 1)
             : 0;
 
-        // Ambil hasil voting per kandidat
-        $votingResults = Candidate::withCount('votes')
+        // Ambil hasil voting
+        $votingResults = Candidate::select('candidates.name', DB::raw('COUNT(votes.id) as votes_count'))
+            ->leftJoin('votes', 'candidates.id', '=', 'votes.candidate_id')
+            ->groupBy('candidates.id', 'candidates.name')
             ->orderByDesc('votes_count')
             ->get()
-            ->map(function ($candidate) use ($totalVoted) {
-                $percentage = $totalVoted > 0 
-                    ? round(($candidate->votes_count / $totalVoted) * 100, 2) 
-                    : 0;
-                    
+            ->map(function($result) use ($totalVoted) {
                 return [
-                    'id' => $candidate->id,
-                    'name' => $candidate->name,
-                    'votes_count' => $candidate->votes_count,
-                    'percentage' => $percentage
+                    'name' => $result->name,
+                    'votes_count' => $result->votes_count,
+                    'percentage' => $totalVoted > 0 ? round(($result->votes_count / $totalVoted) * 100, 1) : 0
                 ];
             });
 
