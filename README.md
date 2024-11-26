@@ -1,5 +1,30 @@
 # E-Voting System Documentation
 
+## Table of Contents
+- [Overview](#overview)
+- [System Requirements](#system-requirements)
+- [Key Features](#key-features)
+  - [Authentication System](#authentication-system)
+  - [Admin Dashboard](#admin-dashboard)
+  - [Participant Management](#participant-management)
+  - [Candidate Management](#candidate-management)
+  - [Voting System](#voting-system)
+  - [Real-time Results](#real-time-results)
+- [Project Structure](#project-structure)
+  - [Routes](#routes)
+  - [Controllers](#controllers)
+  - [Models](#models)
+- [Security Features](#security-features)
+- [Installation Guide](#installation-guide)
+  - [Using Laragon](#using-laragon)
+  - [Installing Composer and NPM](#installing-composer-and-npm-if-not-detected-in-laragon)
+  - [Using XAMPP](#using-xampp)
+- [Troubleshooting](#troubleshooting-common-installation-issues)
+  - [PHP ZIP Extension Error](#php-zip-extension-error)
+  - [Database Connection Error](#database-connection-error)
+  - [Table Already Exists Error](#table-already-exists-error)
+- [Usage Guide](#usage-guide)
+
 ## Overview
 This is a web-based e-voting system built with Laravel, designed to facilitate secure and efficient electronic voting. The system includes both admin and voter interfaces, with features for managing candidates, participants, and real-time voting results.
 
