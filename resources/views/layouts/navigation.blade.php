@@ -64,9 +64,6 @@
                             <x-dropdown-link :href="route('login')">
                                 {{ __('Log In') }}
                             </x-dropdown-link>
-                            <x-dropdown-link :href="route('register')">
-                                {{ __('Register') }}
-                            </x-dropdown-link>
                         @endif
                     </x-slot>
                 </x-dropdown>
@@ -128,9 +125,6 @@
                 @else
                     <x-responsive-nav-link :href="route('login')">
                         {{ __('Log In') }}
-                    </x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('register')">
-                        {{ __('Register') }}
                     </x-responsive-nav-link>
                 @endif
             </div>
