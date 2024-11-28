@@ -19,10 +19,12 @@
   - [Using Laragon](#using-laragon)
   - [Installing Composer and NPM](#installing-composer-and-npm-if-not-detected-in-laragon)
   - [Using XAMPP](#using-xampp)
-- [Troubleshooting](#troubleshooting-common-installation-issues)
+  - [Publishing with Ngrok](#publishing-with-ngrok)
+- [Troubleshooting](#troubleshooting)
   - [PHP ZIP Extension Error](#php-zip-extension-error)
   - [Database Connection Error](#database-connection-error)
   - [Table Already Exists Error](#table-already-exists-error)
+  - [Resolving Storage Issues (File Upload)](#resolving-storage-issues-file-upload)
 - [Usage Guide](#usage-guide)
 
 ## Overview
@@ -262,31 +264,56 @@ After installing both tools, proceed with the regular installation steps above.
     ```
 12. Access the application at [http://localhost/evoting/public](http://localhost/evoting/public)
 
-### Virtual Host Configuration (XAMPP)
-To access the application using a custom domain like evoting.test:
+### Publishing with Ngrok
+To make your local development site accessible from the internet, follow these steps:
 
-1. Edit hosts file (`C:/Windows/System32/drivers/etc/hosts`):
-   ```
-   127.0.0.1 evoting.test
-   ```
+1. Install ngrok from [https://ngrok.com/download](https://ngrok.com/download)
 
-2. Configure Apache Virtual Host (`C:/xampp/apache/conf/extra/httpd-vhosts.conf`):
-   ```apache
-   <VirtualHost *:80>
-       DocumentRoot "C:/xampp/htdocs/evoting/public"
-       ServerName evoting.test
-       <Directory "C:/xampp/htdocs/evoting/public">
-           Options Indexes FollowSymLinks MultiViews
-           AllowOverride All
-           Require all granted
-       </Directory>
-   </VirtualHost>
-   ```
+2. Run the Laravel development server:
+```bash
+php artisan serve --host=0.0.0.0 --port=8000
+```
 
-3. Restart Apache from XAMPP Control Panel
-4. Access the application at [http://evoting.test](http://evoting.test)
+3. In a separate terminal, run the Vite development server:
+```bash
+npm run dev
+```
 
-## Troubleshooting Common Installation Issues
+4. Open a new terminal and run ngrok:
+```bash
+ngrok http 8000
+```
+
+5. After getting the ngrok URL, update your `.env` file:
+```
+APP_URL=https://your-ngrok-url
+VITE_APP_URL="${APP_URL}"
+```
+
+6. Add the following meta tag to all blade files that use assets:
+```html
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+```
+
+7. Rebuild assets:
+```bash
+npm run build
+```
+
+8. Clear Laravel cache:
+```bash
+php artisan optimize:clear
+```
+
+#### Troubleshooting Ngrok
+If you experience issues with assets (CSS/JS) when using ngrok:
+
+1. Ensure all URLs use Laravel helpers (`asset()`, `url()`, `route()`)
+2. Use HTTPS for all external resources
+3. Check the browser console for specific errors
+4. Verify that the Vite configuration in `vite.config.js` is correct
+
+## Troubleshooting
 
 #### PHP ZIP Extension Error
 If you encounter this error during `composer install`:
@@ -454,6 +481,25 @@ This error occurs when trying to create tables that already exist in the databas
 
 Note: Be careful with these commands in a production environment as they will delete existing data. Always backup your database before running these commands.
 
+#### Resolving Storage Issues (File Upload)
+
+If you're experiencing issues with file uploads (storage not working), follow these steps:
+
+1. Create a symbolic link for storage by running the command:
+```bash
+php artisan storage:link
+```
+
+2. Ensure the `storage` folder has the correct permissions:
+```bash
+chmod -R 775 storage
+chmod -R 775 bootstrap/cache
+```
+
+3. Check the filesystem configuration in `config/filesystems.php` and make sure the driver is set to `public`:
+```php
+'default' => env('FILESYSTEM_DISK', 'public'),
+```
 ## Usage Guide
 1. **Admin Access**
    - Login at `/login`
