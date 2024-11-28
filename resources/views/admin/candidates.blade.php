@@ -71,6 +71,8 @@
                         <?php $action_icons = ["icon:pencil | click:redirectToEdit('{id}')", "icon:trash | color:red | click:showModalWithcandidateId('delete-warning', '{id}')"]; ?>
 
                         <x-responsive-table 
+                            paginated="true"
+                            sortable="true"
                             :data="$candidates"
                             columns="no_urut, name, description, photo_url"
                             :actions="$action_icons"

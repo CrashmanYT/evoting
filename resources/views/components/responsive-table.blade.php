@@ -3,6 +3,8 @@
 <div class="overflow-x-auto">
     <x-bladewind::table 
         searchable="true" 
+        paginated="true"
+        sortable="true"
         :include_columns="$columns" 
         :data="$data"
         :action_icons="$actions" 
