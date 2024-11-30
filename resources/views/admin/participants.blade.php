@@ -109,6 +109,7 @@
                                 </div>
                             </div>
                         </x-bladewind::modal>
+
                         <div class="flex justify-between items-center mb-4 mt-6">
                             <div class="flex space-x-4">
                                 <x-bladewind::button tag="a" href="{{ route('admin.participants.create') }}" size="tiny">Tambah
@@ -117,6 +118,7 @@
                             <x-bladewind::button type="button" size="tiny" color="red" onclick="confirmDeleteAll()">
                                 Hapus Semua Data</x-bladewind::button>
                         </div>
+
                         <meta name="csrf-token" content="{{ csrf_token() }}">
                         
                         <script>
@@ -269,10 +271,12 @@
                             columns="nis, name, class, voted"
                             :actions="$action_icons"
                         />
+
+                        <div class="mt-4 px-4">
+                            {{ $paginatedParticipants->links() }}
+                        </div>
                     </div>
                 </div>
             </div>
-
-            {{-- {{ $participants->links() }} <!-- For pagination --> --}}
         @endsection
     </x-app-layout>

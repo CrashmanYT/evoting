@@ -13,8 +13,26 @@ class ParticipantController extends Controller
 {
     public function index()
     {
-        $participants = Participant::all();
-        return view('admin.participants', compact('participants'));
+        $paginatedParticipants = Participant::query()
+            ->select(['id', 'nis', 'name', 'class', 'voted'])
+            ->orderBy('name')
+            ->paginate(10);
+
+        // Transform the data for table display
+        $participants = $paginatedParticipants->map(function ($participant) {
+            return [
+                'id' => $participant->id,
+                'nis' => $participant->nis,
+                'name' => $participant->name,
+                'class' => $participant->class,
+                'voted' => $participant->voted ? 'Sudah' : 'Belum'
+            ];
+        })->toArray();
+
+        return view('admin.participants', [
+            'participants' => $participants,
+            'paginatedParticipants' => $paginatedParticipants
+        ]);
     }
 
     public function create()

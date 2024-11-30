@@ -11,6 +11,23 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    vendor: ['alpinejs']
+                }
+            }
+        },
+        chunkSizeWarningLimit: 1000,
+        minify: 'terser',
+        terserOptions: {
+            compress: {
+                drop_console: true,
+                drop_debugger: true
+            }
+        }
+    },
     server: {
         hmr: {
             host: 'localhost',
